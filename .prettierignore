@@ -1,0 +1,10 @@
+node_modules
+.github/*
+files/*
+public/*
+dist/*
+Scripts/*
+Docs/*
+package-lock.json
+ca-certificate-dev.crt
+CHANGELOG
