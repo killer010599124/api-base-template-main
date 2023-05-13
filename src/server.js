@@ -31,7 +31,7 @@ if (NODE_ENV !== 'production') app.use(express.static('public'));
 // ---------------set API------------ //
 
 
-app.use('/api/order', graphqlHTTP({
+app.use('/api', graphqlHTTP({
   schema,
   graphiql:true
 }));

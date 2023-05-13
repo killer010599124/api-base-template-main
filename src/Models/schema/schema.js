@@ -5,6 +5,8 @@ const Kitchens = require('../orderModule/Kitchens')
 const Orders = require('../orderModule/Orders')
 const Products = require ('../orderModule/Products')
 const Inventory = require('../inventoryModule/Inventory')
+const Supplier = require ('../inventoryModule/Supplier')
+const Warehouse = require ('../inventoryModule/Warehouse')
 
 const { 
     GraphQLObjectType, GraphQLString, 
@@ -17,22 +19,13 @@ const {
 //the data to retrieve or mutate the data   
 
 
+//---------------------Order Module ------------------------\\
+
 const BranchesType = new GraphQLObjectType({
     name: 'Branches',
     fields: () => ({
         id: { type: GraphQLID },
         location: { type: GraphQLString }
-    })
-})
-const InventoryType = new GraphQLObjectType({
-    name: 'inventory',
-    fields: () => ({
-        id: { type: GraphQLID },
-        productId : {type : GraphQLString},
-        branchId : {type : GraphQLString},
-        warehouseId : {type : GraphQLString},
-        quantiry : {type : GraphQLInt},
-        loss : {type : graphql.GraphQLFloat}
     })
 })
 const TablesType = new GraphQLObjectType({
@@ -73,9 +66,40 @@ const ProductsType = new GraphQLObjectType({
         price : {type : GraphQLInt}
     })
 })
-//RootQuery describe how users can use the graph and grab data.
-//E.g Root query to get all authors, get all books, get a particular 
-//book or get a particular author.
+
+//-----------------------Inventory Module---------------------//
+
+
+const InventoryType = new GraphQLObjectType({
+    name: 'inventory',
+    fields: () => ({
+        id: { type: GraphQLID },
+        productId : {type : GraphQLString},
+        branchId : {type : GraphQLString},
+        warehouseId : {type : GraphQLString},
+        quantiry : {type : GraphQLInt},
+        loss : {type : graphql.GraphQLFloat}
+    })
+})
+
+const SupplierType = new GraphQLObjectType({
+    name: 'supplier',
+    fields: () => ({
+        id: { type: GraphQLID },
+        name : {type : GraphQLString},
+        contact : {type : GraphQLString}
+    })
+})
+const WarehouseType = new GraphQLObjectType({
+    name: 'warehouse',
+    fields: () => ({
+        id: { type: GraphQLID },
+        name : {type : GraphQLString},
+        branchId : {type : GraphQLString}
+    })
+})
+
+
 const RootQuery = new GraphQLObjectType({
     name: 'RootQueryType',
     fields: {
@@ -159,7 +183,33 @@ const RootQuery = new GraphQLObjectType({
                 return Inventory.find({});
             }
         },
-        
+        Supplier:{
+            type: SupplierType,
+            args: { id: { type: GraphQLID } },
+            resolve(parent, args) {
+                return Supplier.findById(args.id);
+            }
+        },
+        AllSupplier:{
+            type: new GraphQLList(SupplierType),
+            resolve(parent, args) {
+                return Supplier.find({});
+            }
+        },
+        Warehouse:{
+            type: SupplierType,
+            args: { id: { type: GraphQLID } },
+            resolve(parent, args) {
+                return Warehouse.findById(args.id);
+            }
+        },
+        AllWarehouse:{
+            type: new GraphQLList(SupplierType),
+            resolve(parent, args) {
+                return Warehouse.find({});
+            }
+        },
+
     }
 });
  
@@ -533,6 +583,123 @@ const Mutation = new GraphQLObjectType({
             resolve: (parent, args) => {
                 if (!args.id) return;
                 return Inventory.findByIdAndDelete(
+                    {
+                        _id: args.id
+                    }
+                );
+            }
+        },
+
+        addSupplier: {
+            type: SupplierType,
+            args: {
+                //GraphQLNonNull make these field required                
+                productId: { type: new GraphQLNonNull(GraphQLString) },
+                branchId: { type: new GraphQLNonNull(GraphQLString) },
+                warehouseId: { type: new GraphQLNonNull(GraphQLString) },
+                quantity: { type: new GraphQLNonNull(GraphQLInt) },
+                loss: { type: new GraphQLNonNull(GraphQLFloat) },
+                
+            },
+            resolve(parent, args) {
+                let supplier = new Supplier({
+                    productId: args.productId,
+                    branchId : args.branchId,
+                    warehouseId : args.wardhouseId,
+                    quantity : args.quantity,
+                    loss : args.loss
+                });
+                return supplier.save();
+            }
+        },
+        updateSupplier: {
+            type: SupplierType,
+            args: {
+                //GraphQLNonNull make these field required
+                id : {type : new GraphQLNonNull(GraphQLID)},
+                name: { type: new GraphQLNonNull(GraphQLString) },
+                contact: { type: new GraphQLNonNull(GraphQLString) }
+            },
+            resolve: (parent, args) => {
+                if (!args.id) return;
+                return Supplier.findByIdAndUpdate(
+                    {
+                        _id: args.id
+                    },
+                    {
+                        $set: {
+                            name: args.name,
+                            contact : args.contact
+                        }
+                    }
+                );
+            }
+        },
+        deleteSupplier: {
+            type: SupplierType,
+            args: {
+                //GraphQLNonNull make these field required
+                id : {type : new GraphQLNonNull(GraphQLID)} 
+            },
+            resolve: (parent, args) => {
+                if (!args.id) return;
+                return Supplier.findByIdAndDelete(
+                    {
+                        _id: args.id
+                    }
+                );
+            }
+        },
+
+        addWarehouse: {
+            type: WarehouseType,
+            args: {
+                //GraphQLNonNull make these field required                
+                name: { type: new GraphQLNonNull(GraphQLString) },
+                branchId: { type: new GraphQLNonNull(GraphQLString) },
+               
+            },
+            resolve(parent, args) {
+                let warehouse = new Warehouse({
+                    name: args.name,
+                    branchId : args.branchId,
+                    
+                });
+                return warehouse.save();
+            }
+        },
+        updateWarehouse: {
+            type: WarehouseType,
+            args: {
+                //GraphQLNonNull make these field required
+                id : {type : new GraphQLNonNull(GraphQLID)},
+                name: { type: new GraphQLNonNull(GraphQLString) },
+                branchId: { type: new GraphQLNonNull(GraphQLString) }
+            },
+            resolve: (parent, args) => {
+                if (!args.id) return;
+                return Warehouse.findByIdAndUpdate(
+                    {
+                        _id: args.id
+                    },
+                    {
+                        $set: {
+                            name: args.name,
+                            branchId : args.branchId
+                        }
+                    }
+                );
+            }
+        },
+        deleteWarehouse: {
+            type: WarehouseType,
+            args: {
+                //GraphQLNonNull make these field required
+                id : {type : new GraphQLNonNull(GraphQLID)} 
+            },
+            resolve: (parent, args) => {
+                if (!args.id) return;
+                return Warehouse.findByIdAndDelete(
                     {
                         _id: args.id
                     }
