@@ -4,10 +4,11 @@ const Tables = require('../orderModule/Tables')
 const Kitchens = require('../orderModule/Kitchens')
 const Orders = require('../orderModule/Orders')
 const Products = require ('../orderModule/Products')
+const Inventory = require('../inventoryModule/Inventory')
 
 const { 
     GraphQLObjectType, GraphQLString, 
-    GraphQLID, GraphQLInt,GraphQLSchema, 
+    GraphQLID, GraphQLInt,GraphQLSchema, GraphQLFloat,
     GraphQLList,GraphQLNonNull 
 } = graphql;
 
@@ -23,7 +24,17 @@ const BranchesType = new GraphQLObjectType({
         location: { type: GraphQLString }
     })
 })
-
+const InventoryType = new GraphQLObjectType({
+    name: 'inventory',
+    fields: () => ({
+        id: { type: GraphQLID },
+        productId : {type : GraphQLString},
+        branchId : {type : GraphQLString},
+        warehouseId : {type : GraphQLString},
+        quantiry : {type : GraphQLInt},
+        loss : {type : graphql.GraphQLFloat}
+    })
+})
 const TablesType = new GraphQLObjectType({
     name: 'Tables',
     fields: () => ({
@@ -132,7 +143,23 @@ const RootQuery = new GraphQLObjectType({
             resolve(parent, args) {
                 return ProductsType.find({});
             }
-        }
+        },
+
+
+        Inventory:{
+            type: InventoryType,
+            args: { id: { type: GraphQLID } },
+            resolve(parent, args) {
+                return Inventory.findById(args.id);
+            }
+        },
+        AllInventory:{
+            type: new GraphQLList(InventoryType),
+            resolve(parent, args) {
+                return Inventory.find({});
+            }
+        },
+        
     }
 });
  
@@ -303,7 +330,7 @@ const Mutation = new GraphQLObjectType({
             }
         },
         deleteKitchens: {
-            type: Kitchens,
+            type: KitchensType,
             args: {
                 //GraphQLNonNull make these field required
                 id : {type : new GraphQLNonNull(GraphQLID)} 
@@ -438,6 +465,74 @@ const Mutation = new GraphQLObjectType({
             resolve: (parent, args) => {
                 if (!args.id) return;
                 return Products.findByIdAndDelete(
+                    {
+                        _id: args.id
+                    }
+                );
+            }
+        },
+
+
+        addInventory: {
+            type: InventoryType,
+            args: {
+                //GraphQLNonNull make these field required                
+                productId: { type: new GraphQLNonNull(GraphQLString) },
+                branchId: { type: new GraphQLNonNull(GraphQLString) },
+                warehouseId: { type: new GraphQLNonNull(GraphQLString) },
+                quantity: { type: new GraphQLNonNull(GraphQLInt) },
+                loss: { type: new GraphQLNonNull(GraphQLFloat) },
+                
+            },
+            resolve(parent, args) {
+                let inventory = new Inventory({
+                    productId: args.productId,
+                    branchId : args.branchId,
+                    warehouseId : args.wardhouseId,
+                    quantity : args.quantity,
+                    loss : args.loss
+                });
+                return inventory.save();
+            }
+        },
+        updateInventory: {
+            type: InventoryType,
+            args: {
+                //GraphQLNonNull make these field required
+                id : {type : new GraphQLNonNull(GraphQLID)},
+                productId: { type: new GraphQLNonNull(GraphQLString) },
+                branchId: { type: new GraphQLNonNull(GraphQLString) },
+                warehouseId: { type: new GraphQLNonNull(GraphQLString) },
+                quantity: { type: new GraphQLNonNull(GraphQLInt) },
+                loss: { type: new GraphQLNonNull(GraphQLFloat) }
+            },
+            resolve: (parent, args) => {
+                if (!args.id) return;
+                return Inventory.findByIdAndUpdate(
+                    {
+                        _id: args.id
+                    },
+                    {
+                        $set: {
+                            productId: args.productId,
+                            branchId : args.branchId,
+                            warehouseId : args.wardhouseId,
+                            quantity : args.quantity,
+                            loss : args.loss
+                        }
+                    }
+                );
+            }
+        },
+        deleteInventory: {
+            type: InventoryType,
+            args: {
+                //GraphQLNonNull make these field required
+                id : {type : new GraphQLNonNull(GraphQLID)} 
+            },
+            resolve: (parent, args) => {
+                if (!args.id) return;
+                return Inventory.findByIdAndDelete(
                     {
                         _id: args.id
                     }

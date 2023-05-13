@@ -16,7 +16,7 @@ const { LOGS_FORMAT, NODE_ENV, PORT, SENTRY_DNS, SENTRY_ENABLE, SENTRY_ENV } = p
 const { graphqlHTTP } = require('express-graphql');
 
 // import schemas   //
-const schema = require('./Models/schema/orderSchema');
+const schema = require('./Models/schema/schema');
 // settings
 app.use(morgan(LOGS_FORMAT || 'dev'));
 app.use(cors());
@@ -31,19 +31,11 @@ if (NODE_ENV !== 'production') app.use(express.static('public'));
 // ---------------set API------------ //
 
 
-app.use('/api', graphqlHTTP({
- 
-  //directing express-graphql to use this schema to map out the graph
-
+app.use('/api/order', graphqlHTTP({
   schema,
-
-  //directing express-graphql to use graphiql when goto '/graphql' address in the browser
-
-  //which provides an interface to make GraphQl queries
-
   graphiql:true
-
 }));
+
 
 app.use('/', MyRouterFile);
 app.use('/*', _404Router);
